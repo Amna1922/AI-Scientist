@@ -1,3 +1,5 @@
+## It was difficult for us to upload such a large project file through github or submission portal. Here is the full project in the drive link: 
+
 # AI Scientist Demo (Protocol Crystallization)
 
 AI Scientist Demo is a full-stack app that turns a hypothesis into a confidence-scored experiment plan with safety checks, literature grounding, editable document output, and DOCX export.
