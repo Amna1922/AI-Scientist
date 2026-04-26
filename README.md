@@ -4,6 +4,8 @@
 
 AI Scientist Demo is a full-stack app that turns a hypothesis into a confidence-scored experiment plan with safety checks, literature grounding, editable document output, and DOCX export.
 
+drive link : https://drive.google.com/file/d/1Wq0arwYSbxsmSm0p7RJNK17CZ3_Zvk3U/view?usp=drive_link
+
 ## What This Project Includes
 
 1. Input validator
