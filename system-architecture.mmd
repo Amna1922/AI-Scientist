@@ -1,0 +1,95 @@
+graph TD
+  U[User]
+
+  subgraph Frontend["Frontend"]
+    FEApp[React App - App.jsx]
+    FEPlanner[Experiment Planner UI]
+    FEDoc[Doc Studio UI]
+    FEState[Client State Store]
+    FEStream[SSE Stream Reader]
+    FEProposal[Experiment Proposal Renderer]
+  end
+
+  subgraph APILayer["API Layer"]
+    FastAPI[FastAPI Service - main.py]
+    HealthAPI[/api/health]
+    PlanAPI[/api/plan/stream]
+    FeedbackAPI[/api/feedback]
+    UpdateAPI[/api/doc-studio/update-node]
+    ExportAPI[/api/doc-studio/export]
+  end
+
+  subgraph AgentPipeline["Agent Pipeline"]
+    Validator[Input Validator Agent]
+    Safety{Safety Gate Agent}
+    Literature[Parallel Literature Agent]
+    Synthesis[Plan Synthesis Orchestrator]
+    ProtocolAgent[Protocol Agent]
+    ReagentAgent[Reagent/Materials Agent]
+    BudgetAgent[Budget Agent]
+    TimelineAgent[Timeline Agent]
+    ValidationAgent[Validation Agent]
+    TrustAgent[Trust Layer Agent]
+    SimAgent[Simulation Agent]
+    DocModel[Document Node Builder]
+    DocRewrite[Doc Node Rewrite Agent]
+    DocExport[DOCX Export Service]
+    LLM([LLM Provider API - OpenAI/Anthropic])
+    ExtLit([External Literature APIs])
+  end
+
+  subgraph Database["Database"]
+    FeedbackDB[(feedback.json Store)]
+    VectorDB[(Protocol/Plan Metadata Store)]
+  end
+
+  U -->|Interacts with UI| FEApp
+  FEApp -->|Navigate / Input Hypothesis| FEPlanner
+  FEApp -->|Edit Proposal| FEDoc
+  FEPlanner -->|POST plan request| PlanAPI
+  FEPlanner -->|POST feedback| FeedbackAPI
+  FEDoc -->|POST node update| UpdateAPI
+  FEDoc -->|POST export request| ExportAPI
+  FEApp -->|GET health check| HealthAPI
+  PlanAPI -->|SSE events| FEStream
+  FEStream -->|Update sections/meta| FEState
+  FEState -->|Render proposal| FEProposal
+
+  HealthAPI -->|Route handling| FastAPI
+  PlanAPI -->|Route handling| FastAPI
+  FeedbackAPI -->|Route handling| FastAPI
+  UpdateAPI -->|Route handling| FastAPI
+  ExportAPI -->|Route handling| FastAPI
+
+  FastAPI -->|Validate hypothesis| Validator
+  Validator -->|Validation result| Safety
+  Safety -->|allow/warn| Literature
+  Safety -->|block decision| PlanAPI
+  Literature -->|Fetch references| ExtLit
+  ExtLit -->|Reference results| Literature
+  Literature -->|Novelty + refs| Synthesis
+  Validator -->|Extracted fields| Synthesis
+  Synthesis -->|Load prior corrections| FeedbackDB
+  Synthesis -->|Build protocol section| ProtocolAgent
+  Synthesis -->|Build materials section| ReagentAgent
+  Synthesis -->|Build budget section| BudgetAgent
+  Synthesis -->|Build timeline section| TimelineAgent
+  Synthesis -->|Build validation section| ValidationAgent
+  Synthesis -->|Optional generate sections| LLM
+  LLM -->|LLM section output| Synthesis
+  Synthesis -->|Plan object| TrustAgent
+  Synthesis -->|Validation inputs| SimAgent
+  TrustAgent -->|Provenance graph| PlanAPI
+  SimAgent -->|Success probability| PlanAPI
+  Synthesis -->|Structured plan| DocModel
+  DocModel -->|Document nodes| PlanAPI
+  PlanAPI -->|Persist run metadata| VectorDB
+
+  UpdateAPI -->|Rewrite instruction + content| DocRewrite
+  DocRewrite -->|Optional rewrite call| LLM
+  LLM -->|Edited node text| DocRewrite
+  DocRewrite -->|Updated node content| UpdateAPI
+
+  ExportAPI -->|Nodes + title| DocExport
+  DocExport -->|DOCX binary| ExportAPI
+  FeedbackAPI -->|Save correction| FeedbackDB
